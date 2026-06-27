@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="manifest" href="manifest.json">
+<title>.</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#000;color:#ccc;font-family:-apple-system,sans-serif;font-size:11px;line-height:1.35;touch-action:none;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;cursor:none}
+#slide{position:absolute;top:0;left:0;right:0;bottom:0;overflow-y:auto;padding:6px 8px 30px 8px;scrollbar-width:none;-ms-overflow-style:none}
+#slide::-webkit-scrollbar{display:none}
+.qtitle{color:#e8b830;font-weight:bold;font-size:11.5px;margin-bottom:4px;padding-bottom:3px;border-bottom:1px solid #333}
+.content{color:#bbb}
+.content p{margin:3px 0}
+.content b,.content strong{color:#ddd}
+.content ul,.content ol{margin:2px 0 2px 14px}
+.content li{margin:1px 0}
+.content code{background:#1a1a2e;color:#7fdbca;padding:0 3px;border-radius:2px;font-size:10px}
+.content pre{background:#0a0a15;color:#7fdbca;padding:4px 6px;margin:3px 0;border-radius:3px;font-size:9.5px;white-space:pre-wrap;word-break:break-all;overflow-x:hidden;line-height:1.3}
+.content table{border-collapse:collapse;margin:3px 0;font-size:10px;width:100%}
+.content th,.content td{border:1px solid #333;padding:2px 4px}
+.content th{background:#1a1a2e;color:#ddd}
+.ext{margin-top:6px;padding-top:6px;border-top:1px dashed #333}
+.ext-title{color:#666;font-size:9px;text-transform:uppercase;margin-bottom:3px}
+#hud{position:fixed;top:0;left:0;right:0;height:2px;background:#111;z-index:100;pointer-events:none}
+#progress{height:2px;background:#e8b830;transition:width .2s}
+#counter{position:fixed;bottom:3px;right:6px;font-size:9px;color:#444;z-index:100;pointer-events:none}
+#scrollhint{position:fixed;bottom:3px;left:6px;font-size:9px;color:#333;z-index:100;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="hud"><div id="progress"></div></div>
+<div id="slide"></div>
+<div id="counter"></div>
+<div id="scrollhint"></div>
+<script>
+if('serviceWorker' in navigator) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+const S=[];
+
+S.push({q:"1. Охарактеризуйте селекторы элемента, идентификатора и класса. Приведите примеры.",a:`<p>В CSS селекторы используются для стилизации HTML-элементов на веб-странице. Это выражения, которые говорят браузеру, к какому элементу HTML нужно применить те или иные свойства CSS.</p>
+
+<p><b>Селектор элемента (тега)</b> — выбирает все элементы данного типа. Пишется как имя тега без символов.</p>
+<pre>p { color: red; }       /* все параграфы */
+h1 { font-size: 20px; } /* все заголовки h1 */</pre>
+
+<p><b>Универсальный селектор *</b> — выбирает всё в документе:</p>
+<pre>* { margin: 0; }</pre>
+
+<p><b>Селектор идентификатора (#)</b> — выбирает элемент с уникальным атрибутом <code>id</code>. На странице один id может быть только у одного элемента. Имеет высокий приоритет (специфичность 0,1,0,0).</p>
+<pre>#header { background: blue; }
+/* &lt;div id="header"&gt; */</pre>
+<p>Можно предварить ID селектором типа:</p>
+<pre>h1#heading { color: rebeccapurple; }</pre>
+
+<p><b>Селектор класса (.)</b> — выбирает все элементы с указанным классом. Класс можно применять к нескольким элементам. Специфичность: 0,0,1,0.</p>
+<pre>.active { color: green; }
+/* &lt;p class="active"&gt; */</pre>
+<p>Можно нацелить на конкретные элементы с данным классом:</p>
+<pre>span.highlight { background-color: yellow; }
+h1.highlight { background-color: pink; }
+p.note { font-style: italic; } /* только p с классом note */</pre>
+
+<p><b>Приоритет (специфичность):</b> id (0,1,0,0) > class (0,0,1,0) > element (0,0,0,1). Inline-стили: 1,0,0,0. <code>!important</code> перебивает всё.</p>
+
+<p>Преимущество подобных селекторов состоит в том, что можно иметь одни и те же элементы HTML, но применять к ним разные стили в зависимости от их класса или идентификатора.</p>`});
+
+S.push({q:"2. Охарактеризуйте селекторы атрибута и псевдокласса. Приведите примеры.",a:`<p><b>Селекторы атрибута</b> — выбирают элементы по наличию или значению атрибута:</p>
+<pre>[attr]       — имеет атрибут attr
+[attr=val]   — атрибут равен val
+[attr~=val]  — содержит слово val
+[attr|=val]  — начинается с val или val-
+[attr^=val]  — начинается с val
+[attr$=val]  — заканчивается на val
+[attr*=val]  — содержит подстроку val</pre>
+<p>Пример: <code>input[type="text"] { border: 1px solid; }</code></p>
+
+<p><b>Псевдоклассы</b> — выбирают элементы в определённом состоянии (пишутся через <code>:</code>). Псевдокласс действует так, как если бы класс был добавлен к элементу в момент взаимодействия с ним пользователя.</p>
+<ul>
+<li><code>:hover</code> — при наведении мыши</li>
+<li><code>:focus</code> — при фокусе (управление с клавиатуры)</li>
+<li><code>:active</code> — при нажатии</li>
+<li><code>:visited</code> — посещённая ссылка</li>
+<li><code>:first-child</code>, <code>:last-child</code> — первый/последний дочерний</li>
+<li><code>:nth-child(n)</code> — n-й дочерний элемент</li>
+<li><code>:not(selector)</code> — отрицание</li>
+</ul>
+<p>Некоторые псевдоклассы применяются только при взаимодействии пользователя с документом — это <b>динамические псевдоклассы</b> (псевдоклассы действий пользователя).</p>
+<pre>a:link, a:visited {
+  color: rebeccapurple;
+  font-weight: bold;
+}
+a:hover { color: hotpink; }
+li:first-child { font-weight: bold; }
+tr:nth-child(2n) { background: #eee; }</pre>`});
+
+S.push({q:"3. Охарактеризуйте фреймворк bootstrap. Приведите его достоинства и недостатки.",a:`<p><b>Bootstrap</b> — это бесплатный CSS-фреймворк с открытым исходным кодом, предназначенный для быстрой вёрстки адаптивных интерфейсов сайтов и веб-приложений с ориентацией на мобильные устройства. Основная область применения — фронтенд-разработка сайтов и интерфейсов админок.</p>
+
+<p>Bootstrap — это набор CSS и JavaScript файлов. Он состоит из:</p>
+<ul>
+<li>Инструментов для создания макета (контейнеры, система сеток, медиа-объекты, адаптивные утилитные классы)</li>
+<li>Классов для стилизации базового контента: текста, изображений, кода, таблиц</li>
+<li>Готовых компонентов: кнопки, формы, навигационные панели, слайдеры, аккордеоны, модальные окна, всплывающие подсказки</li>
+<li>Утилитных классов для решения типичных задач: выравнивание текста, отображение и скрытие элементов, цвет, фон, margin и padding</li>
+</ul>
+
+<p><b>Достоинства:</b></p>
+<ul>
+<li>Уменьшение времени на разработку — готовые компоненты</li>
+<li>Адаптивность (12-колоночная сетка, 5 брейкпоинтов)</li>
+<li>Кроссбраузерная совместимость</li>
+<li>Лёгкость в использовании и быстрота освоения</li>
+<li>Большое сообщество и документация</li>
+<li>Единообразный дизайн</li>
+</ul>
+
+<p><b>Недостатки:</b></p>
+<ul>
+<li>Шаблонность — однотипный внешний вид (сайты «похожи»)</li>
+<li>Отсутствие гибкости — необходимость переопределения стилей для кастомизации</li>
+<li>Избыточный код — подключается весь фреймворк</li>
+<li>Старые браузеры (частичная поддержка)</li>
+<li>Дополнительная нагрузка на сеть</li>
+<li>Использование JQuery (в версиях до 5.0), что тормозит страницы</li>
+</ul>
+
+<p>Bootstrap — инструмент для быстрого создания сайта из стандартных блоков: можно быстро получить качественный сайт, при этом потеряв в оригинальности.</p>`});
+
+S.push({q:"4. Раскройте назначение методов bind и call.",a:`<p>В JavaScript функции — это объекты, и как объекты, функции имеют свои методы, включая <code>apply()</code>, <code>call()</code> и <code>bind()</code>. Все три позволяют явно указывать значение <code>this</code>.</p>
+
+<p><b>Метод call()</b></p>
+<p><code>func.call(context, arg1, arg2, ...)</code> — вызывает функцию <code>func</code>, явно устанавливая <code>this = context</code>. Аргументы передаются через запятую.</p>
+<pre>function greet(phrase) {
+  console.log(phrase + ', ' + this.name);
+}
+greet.call({name: 'Иван'}, 'Привет');
+// "Привет, Иван"</pre>
+<p>Call и Apply каждый является функцией быстрого вызова. Call берёт параметры через запятую, Apply берёт массив аргументов:</p>
+<pre>function add(c, d) {
+  console.log(this.a + this.b + c + d);
+}
+var ten = {a: 1, b: 2};
+add.call(ten, 3, 4);    // 10
+add.apply(ten, [3, 4]);  // 10</pre>
+
+<p><b>Метод bind()</b></p>
+<p><code>func.bind(context, [arg1], ...)</code> — создаёт <b>новую функцию</b> с привязанным <code>this = context</code>. Не вызывает функцию сразу, а возвращает обёртку. Полезен тогда, когда мы не знаем все аргументы наперёд:</p>
+<pre>var small = { a: 1, go: function(b,c,d) {
+    console.log(this.a+b+c+d);
+  }
+}
+var large = { a: 100 }
+var bindTest = small.go.bind(large, 2);
+bindTest(3, 4); // 100+2+3+4 => 109</pre>
+
+<p><b>Различие:</b> <code>call</code> вызывает функцию немедленно, <code>bind</code> возвращает новую функцию с привязанным контекстом (для отложенного вызова, callback'ов).</p>`});
+
+S.push({q:"5. Опишите механизм прототипного наследования.",a:`<p><b>Прототипное наследование</b> — это возможность языка JavaScript. Например, у нас есть объект user со своими свойствами и методами, и мы хотим создать объекты admin и guest как его слегка изменённые варианты. Мы хотели бы повторно использовать то, что есть у user, не копируя его методы, а просто создать новый объект на его основе.</p>
+
+<p>В JavaScript у каждого объекта есть скрытое свойство <code>[[Prototype]]</code>, которое либо равно <code>null</code>, либо ссылается на другой объект. Этот объект называется «прототип».</p>
+
+<p>Когда мы хотим прочитать свойство из объекта, а оно отсутствует, JavaScript автоматически берёт его из прототипа. В программировании такой механизм называется «прототипным наследованием». Это <b>цепочка прототипов</b>.</p>
+
+<p><b>Способы установки прототипа:</b></p>
+<ul>
+<li><code>Object.create(proto)</code> — создать объект с указанным прототипом</li>
+<li><code>Object.setPrototypeOf(obj, proto)</code> — установить прототип</li>
+<li><code>__proto__</code> — устаревший getter/setter для [[Prototype]]</li>
+<li><code>F.prototype</code> — свойство функции-конструктора; при вызове <code>new F()</code> у нового объекта [[Prototype]] устанавливается в F.prototype</li>
+</ul>
+
+<pre>let animal = { eats: true };
+let rabbit = { jumps: true };
+rabbit.__proto__ = animal;
+
+console.log(rabbit.eats);  // true — из прототипа
+console.log(rabbit.jumps); // true — собственное
+rabbit.hasOwnProperty('jumps'); // true
+rabbit.hasOwnProperty('eats');  // false</pre>
+
+<p><code>hasOwnProperty(key)</code> — проверяет, является ли свойство собственным (не из прототипа).</p>
+
+<p><b>Важно:</b> операции записи/удаления работают непосредственно с объектом, они не используют прототип. Если мы вызываем <code>obj.method()</code>, а метод при этом взят из прототипа, то <code>this</code> всё равно ссылается на <code>obj</code>. Цикл <code>for..in</code> перебирает как свои, так и унаследованные свойства. Остальные методы (<code>Object.keys</code> и т.д.) работают только с собственными свойствами.</p>`});
+
+S.push({q:"6. Охарактеризуйте понятие DOM, приведите методы для получения элементов.",a:`<p><b>DOM (Document Object Model)</b> — объектная модель документа, представляющая HTML-страницу в виде дерева узлов. Каждый HTML-тег является объектом. Вложенные теги являются «детьми» родительского элемента. Текст внутри тега — тоже объект. Все эти объекты доступны при помощи JavaScript. Например, <code>document.body</code> — объект для тега &lt;body&gt;.</p>
+
+<p>Теги являются узлами-элементами, они образуют структуру дерева. Текст внутри элементов образует текстовые узлы (#text). Текстовый узел находится всегда на самом нижнем уровне. Всё, что есть в HTML, даже комментарии, является частью DOM.</p>
+
+<p>Иерархия классов: <code>EventTarget → Node → Element → HTMLElement</code>.</p>
+
+<p><b>Методы получения элементов:</b></p>
+<table>
+<tr><th>Метод</th><th>Ищет по</th><th>Возвращает</th></tr>
+<tr><td><code>getElementById(id)</code></td><td>id</td><td>один элемент</td></tr>
+<tr><td><code>getElementsByClassName(cls)</code></td><td>class</td><td>коллекцию (живую)</td></tr>
+<tr><td><code>getElementsByTagName(tag)</code></td><td>тегу</td><td>коллекцию (живую)</td></tr>
+<tr><td><code>querySelector(css)</code></td><td>CSS-селектору</td><td>первый найденный</td></tr>
+<tr><td><code>querySelectorAll(css)</code></td><td>CSS-селектору</td><td>статич. коллекцию</td></tr>
+</table>
+
+<p>В случае селектора с несколькими элементами <code>querySelector()</code> возвращает первый элемент, соответствующий запросу. Метод <code>querySelectorAll()</code> можно использовать для сбора всех элементов, соответствующих запросу.</p>
+
+<p><b>Навигация по DOM:</b> <code>parentNode</code>, <code>childNodes</code>, <code>firstChild</code>, <code>lastChild</code>, <code>nextSibling</code>, <code>previousSibling</code>; для элементов: <code>children</code>, <code>firstElementChild</code>, <code>nextElementSibling</code> и т.д.</p>
+
+<p><b>Модификация DOM:</b> <code>createElement(tag)</code>, <code>append()</code>, <code>prepend()</code>, <code>before()</code>, <code>after()</code>, <code>remove()</code>, <code>cloneNode(deep)</code>, <code>insertAdjacentHTML(where, html)</code>.</p>`});
+
+S.push({q:"7. Опишите механизм применения стилевых правил согласно приоритетам.",a:`<p>Способы добавления стилей на веб-страницу: подключить внешнюю таблицу стилей; добавить внутреннюю через тег <code>&lt;style&gt;</code>; определить inline-стиль через атрибут <code>style="..."</code>.</p>
+
+<p><b>Каскадность CSS</b> — это механизм, благодаря которому к элементу может применяться более чем одно правило CSS из различных источников. Поскольку при этом часто происходит конфликт стилей, была создана система приоритетов.</p>
+
+<p>При конфликте CSS-правил браузер определяет приоритет по следующим критериям (от высшего к низшему):</p>
+<ol>
+<li><b><code>!important</code></b> — наивысший приоритет (перебивает всё)</li>
+<li><b>Inline-стили</b> (<code>style="..."</code>) — специфичность 1,0,0,0</li>
+<li><b>Специфичность селектора</b> — рассчитывается как (a, b, c, d):
+  <ul>
+  <li>a — inline-стиль (0 или 1)</li>
+  <li>b — количество id-селекторов</li>
+  <li>c — количество классов, псевдоклассов, атрибутов</li>
+  <li>d — количество элементов и псевдоэлементов</li>
+  </ul>
+</li>
+<li><b>Порядок объявления</b> — при равной специфичности побеждает последнее правило</li>
+<li><b>Наследование</b> — некоторые свойства (color, font-*) наследуются от родителя</li>
+</ol>
+
+<p><b>Вес селекторов:</b> тег=1, класс=10, ID=100, inline=1000. Когда селектор состоит из нескольких других, необходимо посчитать общий вес:</p>
+<table>
+<tr><th>Селектор</th><th>Вес</th></tr>
+<tr><td>p</td><td>1</td></tr>
+<tr><td>.your_class</td><td>10</td></tr>
+<tr><td>p.your_class</td><td>11</td></tr>
+<tr><td>#your_id</td><td>100</td></tr>
+<tr><td>#your_id .your_class</td><td>110</td></tr>
+</table>
+
+<p>Если два селектора имеют одинаковый вес, приоритет отдаётся тому стилю, который находится ниже в коде.</p>
+<pre>p { color: red !important; }
+p { color: green; } /* будет red — !important */</pre>
+<p><b>Пример расчёта:</b> <code>#nav .item a:hover</code> → 0,1,2,1 (1 id + 1 class + 1 pseudo-class + 1 element).</p>`});
+
+S.push({q:"8. Опишите принцип работы адаптивной сетки bootstrap’а.",a:`<p>Система Bootstrap Grid нужна для разметки страницы и создания адаптивных макетов. Сетка основана на <b>12-колоночной системе</b> с использованием Flexbox.</p>
+
+<p><b>Структура:</b> <code>container → row → col</code></p>
+<p>Основные правила сетки:</p>
+<ul>
+<li>Колонки находятся строго внутри ряда на первом уровне вложенности</li>
+<li>Ряды нужны только для размещения колонок</li>
+<li>Ряды должны располагаться внутри контейнера</li>
+<li><code>.container</code> — фиксированная ширина (центрируется), <code>.container-fluid</code> — 100% ширины</li>
+</ul>
+<p>Пространство между колонками называется "желоб" (gutter).</p>
+
+<p>Фреймворк определяет <b>5 уровней адаптивности (брейкпоинтов)</b>:</p>
+<table>
+<tr><th>Уровень</th><th>Префикс</th><th>Ширина</th></tr>
+<tr><td>Extra small (xs)</td><td><code>.col-</code></td><td>&lt;576px</td></tr>
+<tr><td>Small</td><td><code>.col-sm-</code></td><td>≥576px</td></tr>
+<tr><td>Medium</td><td><code>.col-md-</code></td><td>≥768px</td></tr>
+<tr><td>Large</td><td><code>.col-lg-</code></td><td>≥992px</td></tr>
+<tr><td>Extra large</td><td><code>.col-xl-</code></td><td>≥1200px</td></tr>
+</table>
+
+<p>Уровень xs используется по умолчанию — вместо <code>col-xs-6</code> пишем просто <code>col-6</code>.</p>
+
+<p><code>.col-sm-6</code> устанавливает ширину в 6 из 12 единиц = 50% на sm+. Если область просмотра меньше этого размера — каждая колонка растягивается на 100% (вертикальная структура). Для всех колонок подразумевается <code>col-12</code> по умолчанию.</p>
+
+<pre>&lt;div class="container"&gt;
+  &lt;div class="row"&gt;
+    &lt;div class="col-md-6 col-sm-12"&gt;50% md+&lt;/div&gt;
+    &lt;div class="col-md-6 col-sm-12"&gt;50% md+&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+
+<p>Большие брейкпоинты переопределяют меньшие. Bootstrap использует медиа-запросы CSS для отслеживания ширины экрана.</p>`});
+
+S.push({q:"9. Приведите и дайте краткую характеристику типам HTTP-запросов.",a:`<p>HTTP определяет множество методов запроса, которые указывают, какое желаемое действие выполнится для данного ресурса. Каждый реализует свою семантику, но каждая группа команд разделяет общие свойства: методы могут быть безопасными, идемпотентными или кешируемыми.</p>
+
+<p><b>Структура HTTP-запроса:</b> стартовая строка (метод URI версия), заголовки, пустая строка, тело.</p>
+
+<table>
+<tr><th>Метод</th><th>Назначение</th><th>Тело</th></tr>
+<tr><td><code>GET</code></td><td>Получение ресурса</td><td>Нет</td></tr>
+<tr><td><code>POST</code></td><td>Отправка данных (создание)</td><td>Да</td></tr>
+<tr><td><code>PUT</code></td><td>Полная замена ресурса</td><td>Да</td></tr>
+<tr><td><code>PATCH</code></td><td>Частичное изменение ресурса</td><td>Да</td></tr>
+<tr><td><code>DELETE</code></td><td>Удаление ресурса</td><td>Нет</td></tr>
+<tr><td><code>HEAD</code></td><td>Как GET, но без тела ответа</td><td>Нет</td></tr>
+<tr><td><code>OPTIONS</code></td><td>Описание параметров соединения</td><td>Нет</td></tr>
+<tr><td><code>CONNECT</code></td><td>Установка "туннеля" к серверу</td><td>Нет</td></tr>
+<tr><td><code>TRACE</code></td><td>Тестовое сообщение с ресурса</td><td>Нет</td></tr>
+</table>
+
+<p><b>Коды ответов:</b></p>
+<ul>
+<li><b>1xx</b> — информационные (100 Continue)</li>
+<li><b>2xx</b> — успех (200 OK, 201 Created)</li>
+<li><b>3xx</b> — перенаправление (301 Moved Permanently, 302 Found)</li>
+<li><b>4xx</b> — ошибка клиента (400 Bad Request, 403 Forbidden, 404 Not Found)</li>
+<li><b>5xx</b> — ошибка сервера (500 Internal Server Error, 503 Service Unavailable)</li>
+</ul>`});
+
+S.push({q:"10. Раскройте понятие «трейт» и приведите пример.",a:`<p><b>Трейт (trait)</b> — это механизм обеспечения повторного использования кода в PHP. Трейт похож на класс, но не может быть инстанцирован. Он предназначен для уменьшения ограничений одиночного наследования, позволяя разработчику повторно использовать наборы методов свободно, в нескольких независимых классах.</p>
+
+<p><b>Приоритет:</b> члены из текущего класса переопределяют методы трейта, которые в свою очередь переопределяют унаследованные методы из базового класса.</p>
+
+<p>В класс можно добавить несколько трейтов, перечислив их в директиве <code>use</code> через запятую. Если два трейта добавляют метод с одним и тем же именем — это приводит к фатальной ошибке, если конфликт явно не разрешён.</p>
+
+<p>Для разрешения конфликтов: <code>insteadof</code> — выбрать один из конфликтующих методов; <code>as</code> — включить метод под другим именем (не переименовывает оригинал).</p>
+
+<pre>trait Timestampable {
+    public function getCreatedAt() {
+        return $this->created_at;
+    }
+    public function setCreatedAt($date) {
+        $this->created_at = $date;
+    }
+}
+
+trait SoftDeletable {
+    public function softDelete() {
+        $this->deleted = true;
+    }
+}
+
+class User {
+    use Timestampable, SoftDeletable;
+    private $created_at;
+    private $deleted = false;
+}
+
+$user = new User();
+$user->setCreatedAt('2026-01-01');
+$user->softDelete();</pre>
+<p>Подключение: <code>use TraitName;</code> внутри класса. Можно использовать несколько трейтов через запятую.</p>`});
+
+S.push({q:"11. Опишите механизм работы PHP сессий.",a:`<p><b>Сессия</b> — механизм хранения данных о пользователе на сервере между HTTP-запросами.</p>
+
+<p><b>Механизм работы:</b></p>
+<p>При авторизации пользователя сервер генерирует и запоминает уникальный ключ — идентификатор сессии, и сообщает его браузеру. Браузер сохраняет этот ключ и при каждом последующем запросе его отправляет.</p>
+
+<ol>
+<li><code>session_start()</code> — запускает/возобновляет сессию</li>
+<li>PHP генерирует уникальный <b>session ID</b> (PHPSESSID) и отправляет его клиенту через cookie</li>
+<li>На сервере создаётся файл сессии, данные хранятся в суперглобальном массиве <code>$_SESSION</code></li>
+<li>При каждом последующем запросе браузер отправляет cookie с session ID → PHP находит файл сессии и восстанавливает <code>$_SESSION</code></li>
+</ol>
+
+<p>Поддержка сессий позволяет сохранять данные между запросами в суперглобальном массиве <code>$_SESSION</code>. PHP проверяет автоматически (если <code>session.auto_start=1</code>) или по запросу (через <code>session_start()</code>), был ли идентификатор сессии послан вместе с запросом. Если да — восстанавливает сохранённое ранее окружение.</p>
+
+<pre>session_start();
+$_SESSION['user'] = 'Ivan';     // запись
+echo $_SESSION['user'];         // чтение
+unset($_SESSION['user']);        // удаление переменной
+session_destroy();               // уничтожение сессии</pre>
+
+<p><b>Отличие от cookies:</b> данные сессии хранятся на сервере (безопаснее), клиент получает только ID. Cookies хранятся на клиенте.</p>`});
+
+S.push({q:"12. Перечислите типы данных в JavaScript. Каково назначение и особенности оператора typeof?",a:`<p><b>8 типов данных в JavaScript:</b></p>
+
+<p><b>Примитивные (7):</b></p>
+<ul>
+<li><code>number</code> — числа (целые, дробные, Infinity, -Infinity, NaN). Не может содержать числа больше 2<sup>53</sup>-1</li>
+<li><code>bigint</code> — большие целые числа. Создаётся добавлением <code>n</code> в конец: <code>const big = 123n;</code></li>
+<li><code>string</code> — строки. 3 типа кавычек: 'одинарные', "двойные", \`обратные кавычки с \${var}\`</li>
+<li><code>boolean</code> — true / false</li>
+<li><code>null</code> — специальное значение, «пустое». Формирует отдельный тип</li>
+<li><code>undefined</code> — «значение не было присвоено». Если переменная объявлена, но не присвоена, её значение — undefined</li>
+<li><code>symbol</code> — уникальный идентификатор для создания уникальных ключей в объектах</li>
+</ul>
+
+<p><b>Ссылочный (1):</b> <code>object</code> — объекты, массивы, функции и т.д.</p>
+
+<p><b>Оператор <code>typeof</code></b> — возвращает строку с типом операнда. Это полезно, когда мы хотим обрабатывать значения различных типов по-разному или просто хотим сделать проверку. У него есть две синтаксические формы: <code>typeof x</code> и <code>typeof(x)</code>.</p>
+
+<pre>typeof 42           // "number"
+typeof "hello"      // "string"
+typeof true         // "boolean"
+typeof undefined    // "undefined"
+typeof null         // "object"  ← историческая ошибка!
+typeof {}           // "object"
+typeof []           // "object"
+typeof function(){} // "function" ← особый случай
+typeof Symbol()     // "symbol"
+typeof 10n          // "bigint"</pre>
+
+<p><b>Особенности:</b> <code>typeof null === "object"</code> — это историческая ошибка (баг) в языке, <code>null</code> на самом деле не является объектом, это специальное значение с собственным типом. <code>typeof function</code> возвращает <code>"function"</code>, хотя формально функция — это тоже object.</p>`});
+
+S.push({q:"13. Опишите алгоритм приведения объекта JS к примитивному типу.",a:`<p>При приведении объекта к примитиву JS использует метод <code>[Symbol.toPrimitive](hint)</code>, если он определён. Параметр <b>hint</b> указывает желаемый тип:</p>
+<ul>
+<li><code>"string"</code> — для операций, ожидающих строку (alert, шаблонные строки)</li>
+<li><code>"number"</code> — для математических операций</li>
+<li><code>"default"</code> — происходит редко, когда оператор «не уверен», какой тип ожидать (бинарный <code>+</code>, <code>==</code>)</li>
+</ul>
+
+<p><b>Процесс преобразования:</b></p>
+<ol>
+<li>Вызывает <code>obj[Symbol.toPrimitive](hint)</code> — метод с символьным ключом Symbol.toPrimitive, если такой метод существует, и передаёт ему хинт</li>
+<li>Иначе, если хинт равен <code>"string"</code>: пытается вызвать <code>obj.toString()</code>, а если его нет или он не вернул примитив, то <code>obj.valueOf()</code></li>
+<li>В случае, если хинт равен <code>"number"</code> или <code>"default"</code>: пытается вызвать <code>obj.valueOf()</code>, а если его нет, то <code>obj.toString()</code></li>
+</ol>
+
+<pre>let user = {
+  name: "Иван",
+  money: 1000,
+  [Symbol.toPrimitive](hint) {
+    if (hint === "string") return this.name;
+    return this.money; // number и default
+  }
+};
+
+alert(user);     // "Иван"  (hint: string)
+alert(+user);    // 1000    (hint: number)
+alert(user + 1); // 1001    (hint: default)</pre>`});
+
+S.push({q:"14. Дайте определение и приведите пример использования примеси (mixin).",a:`<p><b>Примесь (mixin)</b> — это класс, методы которого предназначены для использования в других классах, причём без наследования от примеси. Mixin представляет собой набор свойств и методов, которые могут быть использованы в различных классах, которые не приходят из базового класса.</p>
+
+<p>JS не поддерживает множественное наследование, поэтому миксины — способ добавить дополнительную функциональность.</p>
+
+<p>Простейший способ реализовать примесь в JavaScript — это создать объект с полезными методами, которые затем могут быть легко добавлены в прототип любого класса через <code>Object.assign()</code>:</p>
+
+<pre>// примесь
+let sayHiMixin = {
+  sayHi() {
+    alert(\`Привет, \${this.name}!\`);
+  },
+  sayBye() {
+    alert(\`Пока, \${this.name}!\`);
+  }
+};
+
+// использование:
+class User {
+  constructor(name) {
+    this.name = name;
+  }
+}
+
+// копируем методы миксина в прототип
+Object.assign(User.prototype, sayHiMixin);
+
+new User("Иван").sayHi();
+// "Привет, Иван!"</pre>
+
+<p>Миксины могут использовать наследование между собой и вызывать <code>super</code>-методы. Это не наследование классов — методы просто копируются в прототип целевого класса.</p>`});
+
+S.push({q:"15. Опишите паттерн MVC.",a:`<p><b>MVC</b> расшифровывается как «модель-представление-контроллер». Это архитектурный паттерн — способ организации кода, который предполагает выделение блоков, отвечающих за решение разных задач. Один блок отвечает за данные приложения, другой — за внешний вид, а третий контролирует работу приложения.</p>
+
+<ul>
+<li><b>Model (Модель)</b> — этот компонент отвечает за данные, а также определяет структуру приложения. Работает с БД, выполняет вычисления. Например, в To-Do приложении код модели определяет список задач. Модель не знает об интерфейсе.</li>
+<li><b>View (Представление)</b> — этот компонент отвечает за взаимодействие с пользователем. Код View определяет внешний вид приложения и способы его использования (шаблоны, HTML). Получает данные от модели и выводит их.</li>
+<li><b>Controller (Контроллер)</b> — этот компонент отвечает за связь между Model и View. Код контроллера определяет, как сайт реагирует на действия пользователя. Принимает входящие запросы, вызывает нужные методы модели, выбирает представление для отображения результата.</li>
+</ul>
+
+<p><b>Поток данных:</b> Пользователь → Controller → Model → Controller → View → Пользователь.</p>
+
+<p><b>Пример:</b> сайт отдаёт пользователю список его друзей — Model получает данные из БД, Controller вызывает Model и выбирает View, View отображает список.</p>
+
+<p><b>Преимущества:</b> разделение ответственности, возможность независимой разработки и тестирования компонентов, поддержка нескольких представлений для одних данных.</p>`});
+
+S.push({q:"16. Приведите основные возможности микрофреймворка Flask.",a:`<p><b>Flask</b> — фреймворк для создания веб-приложений на языке программирования Python, использующий набор инструментов Werkzeug, а также шаблонизатор Jinja2. Относится к категории микрофреймворков — минималистичных каркасов веб-приложений, сознательно предоставляющих лишь самые базовые возможности.</p>
+
+<p>Flask зависит от внешних библиотек: <b>Werkzeug</b> — набор инструментов для WSGI, используется для разработки и развертывания; <b>Jinja2</b> — шаблонизатор, позволяет создавать HTML-шаблоны с помощью Python.</p>
+
+<p><b>Основные возможности:</b></p>
+<ul>
+<li><b>Маршрутизация</b> — декоратор <code>@app.route('/path')</code> с поддержкой переменных правил: <code>&lt;string:name&gt;</code>, <code>&lt;int:id&gt;</code>, <code>&lt;float:val&gt;</code>, <code>&lt;path:p&gt;</code>, <code>&lt;uuid:uid&gt;</code></li>
+<li><b>HTTP-методы</b> — <code>methods=['GET','POST']</code></li>
+<li><b>Объект request</b> — <code>request.method</code>, <code>request.form</code>, <code>request.args</code>, <code>request.files</code></li>
+<li><b>Сессии</b> — <code>session['key']</code>, подписанные cookies</li>
+<li><b>Объект g</b> — глобальный контекст запроса</li>
+<li><b>Шаблоны Jinja2</b> — <code>render_template('tpl.html', var=val)</code></li>
+<li><b>Обработка ошибок</b> — <code>@app.errorhandler(404)</code></li>
+<li><b>jsonify()</b> — возврат JSON-ответов</li>
+<li><b>url_for()</b> — генерация URL по имени функции</li>
+<li><b>make_response()</b> — создание объекта ответа</li>
+<li><b>Статические файлы</b> — папка <code>static/</code></li>
+<li>Сервер разработки и отладчик</li>
+<li>Интегрированная поддержка модульного тестирования</li>
+<li>Отправка запросов RESTful</li>
+<li>100% соответствие WSGI 1.0, поддержка Unicode</li>
+</ul>
+
+<p>Лучше всего Flask использовать для создания небольших проектов со статическим контентом, а также для создания микросервисов.</p>`});
+
+S.push({q:"17. Опишите возможности шаблонизатора Jinja2.",a:`<p><b>Jinja2</b> — шаблонизатор для Python, используется во Flask. Все шаблоны хранятся в папке <code>templates</code>. Для вывода шаблона используется функция <code>render_template()</code>.</p>
+
+<p><b>Синтаксис:</b></p>
+<ul>
+<li><code>{{ выражение }}</code> — вывод переменной</li>
+<li><code>{# комментарий #}</code> — комментарий</li>
+<li><code>{% инструкция %}</code> — управляющая конструкция</li>
+</ul>
+
+<p><b>Управляющие конструкции:</b></p>
+<pre>{% set x = 5 %}
+{% if cond %}...{% elif %}...{% else %}...{% endif %}
+{% for item in list %}
+  {{ loop.index }}. {{ item }}
+{% endfor %}</pre>
+<p>В цикле доступны: <code>loop.index</code>, <code>loop.first</code>, <code>loop.last</code>.</p>
+
+<p><b>Фильтры:</b> <code>{{ name|upper }}</code>, <code>|lower</code>, <code>|capitalize</code>, <code>|escape</code>, <code>|safe</code>, <code>|length</code>, <code>|trim</code>, <code>|random</code>.</p>
+
+<p><b>Включение и наследование:</b></p>
+<ul>
+<li><code>{% include 'header.html' %}</code> — вставка шаблона</li>
+<li><code>{% macro input(name, type='text') %}...{% endmacro %}</code> — макросы (аналог функций)</li>
+<li><code>{% extends 'base.html' %}</code> — наследование шаблона</li>
+<li><code>{% block content %}...{% endblock %}</code> — блоки для переопределения</li>
+<li><code>{{ super() }}</code> — вызов содержимого родительского блока</li>
+</ul>`});
+
+S.push({q:"18. Приведите основные возможности библиотеки ReactJS. Охарактеризуйте JSX.",a:`<p><b>ReactJS</b> — JavaScript-библиотека для построения пользовательских интерфейсов (Facebook, 2013). Реактивность — в ответ на изменение одного элемента автоматически обновляется остальное. Используется для SPA и многостраничных приложений.</p>
+
+<p><b>Основные возможности:</b></p>
+<ul>
+<li><b>Virtual DOM (VDOM)</b> — виртуальное представление DOM в памяти. React сравнивает VDOM с реальным DOM (reconciliation) и обновляет только изменившиеся части — высокая производительность.</li>
+<li><b>Компонентный подход</b> — UI строится из переиспользуемых компонентов</li>
+<li><b>Однонаправленный поток данных</b> — данные передаются от родителя к дочернему через props</li>
+<li><b>Хуки</b> — useState, useEffect, useContext, useRef и др.</li>
+<li><b>React Router</b> — маршрутизация SPA</li>
+</ul>
+
+<p><b>JSX (JavaScript XML)</b> — расширение синтаксиса JS, позволяющее писать HTML-подобный код внутри JS. Транспилируется в вызовы <code>React.createElement()</code>.</p>
+<pre>const el = &lt;h1 className="title"&gt;Привет, {name}!&lt;/h1&gt;;
+// эквивалент:
+React.createElement('h1',
+  {className:'title'}, 'Привет, '+name+'!');</pre>
+<p><b>Правила JSX:</b> один корневой элемент (или <code>&lt;&gt;...&lt;/&gt;</code>), JS-выражения в <code>{}</code>, <code>className</code> вместо <code>class</code>, <code>htmlFor</code> вместо <code>for</code>, самозакрывающиеся теги <code>&lt;img /&gt;</code>.</p>`});
+
+S.push({q:"19. Охарактеризуйте props и state.",a:`<p><b>Props (свойства)</b> — аргументы, передаваемые компоненту от родителя (как HTML-атрибуты). Props <b>только для чтения</b> — компонент не может изменять свои props. В props можно передавать любые типы данных, даже другие компоненты.</p>
+<pre>// Родитель
+&lt;Welcome name="Иван" /&gt;
+// Дочерний
+function Welcome(props) {
+  return &lt;h1&gt;Привет, {props.name}&lt;/h1&gt;;
+}</pre>
+
+<p><b>State (состояние)</b> — внутренние данные компонента, которые он может изменять. Изменение state вызывает <b>повторный рендеринг</b>.</p>
+<pre>// Классовый компонент
+this.state = { count: 0 };
+this.setState({ count: this.state.count + 1 });
+// Функциональный компонент
+const [count, setCount] = useState(0);
+setCount(prev => prev + 1);</pre>
+
+<table>
+<tr><th></th><th>Props</th><th>State</th></tr>
+<tr><td>Источник</td><td>Родитель</td><td>Сам компонент</td></tr>
+<tr><td>Изменяемость</td><td>Только чтение</td><td>Изменяемый (setState/set)</td></tr>
+<tr><td>Ре-рендер</td><td>При изменении от родителя</td><td>При вызове setState/set</td></tr>
+</table>`});
+
+S.push({q:"20. Опишите методы жизненного цикла компонента react.",a:`<p><b>Жизненный цикл</b> классового компонента (3 фазы):</p>
+
+<p><b>1. Mounting (монтирование):</b></p>
+<ul>
+<li><code>constructor(props)</code> — инициализация state, привязка методов</li>
+<li><code>render()</code> — возвращает JSX (обязательный метод)</li>
+<li><code>componentDidMount()</code> — вызывается после вставки в DOM (запросы к API, подписки)</li>
+</ul>
+
+<p><b>2. Updating (обновление)</b> — при изменении props/state/forceUpdate:</p>
+<ul>
+<li><code>render()</code> — повторный рендеринг</li>
+<li><code>componentDidUpdate(prevProps, prevState)</code> — после обновления DOM</li>
+</ul>
+
+<p><b>3. Unmounting (размонтирование):</b></p>
+<ul>
+<li><code>componentWillUnmount()</code> — перед удалением из DOM (отписки, очистка таймеров)</li>
+</ul>
+
+<p><b>Обработка ошибок:</b></p>
+<ul>
+<li><code>getDerivedStateFromError(error)</code> — обновляет state при ошибке (Error Boundary)</li>
+<li><code>componentDidCatch(error, info)</code> — логирование ошибок</li>
+</ul>
+
+<p>В функциональных компонентах жизненный цикл заменяется хуком <code>useEffect</code>.</p>`});
+
+S.push({q:"21. Опишите основные возможности библиотеки RHF, приведите примеры.",a:`<p><b>React Hook Form (RHF)</b> — библиотека для работы с формами в React. Использует неконтролируемые компоненты и ref для повышения производительности.</p>
+
+<p><b>Хук <code>useForm()</code></b> возвращает:</p>
+<ul>
+<li><code>register</code> — регистрация поля ввода</li>
+<li><code>handleSubmit</code> — обработчик отправки формы</li>
+<li><code>watch</code> — наблюдение за значениями полей</li>
+<li><code>reset</code> — сброс формы</li>
+<li><code>setValue / getValues</code> — установка/получение значений</li>
+<li><code>setError / trigger</code> — ручная установка ошибки / валидация</li>
+<li><code>formState</code>: <code>isDirty</code>, <code>isSubmitted</code>, <code>isValid</code>, <code>errors</code></li>
+</ul>
+
+<pre>import { useForm } from 'react-hook-form';
+function MyForm() {
+  const { register, handleSubmit,
+    formState: { errors } } = useForm();
+  const onSubmit = data => console.log(data);
+  return (
+    &lt;form onSubmit={handleSubmit(onSubmit)}&gt;
+      &lt;input {...register("name",
+        { required: true })} /&gt;
+      {errors.name &&
+        &lt;span&gt;Обязательное поле&lt;/span&gt;}
+      &lt;button type="submit"&gt;Отправить&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</pre>
+<p><b>Параметры useForm:</b> <code>mode</code> (onChange/onBlur/onSubmit), <code>defaultValues</code>, <code>resolver</code> (для Zod/Yup).</p>`});
+
+S.push({q:"22. Опишите механизм мемоизации в ReactJS. Каково назначение хуков useCallback и useMemo?",a:`<p><b>Мемоизация</b> — техника кэширования результатов вычислений. При повторном вызове с теми же аргументами возвращается кэшированный результат вместо повторного вычисления.</p>
+
+<p><b><code>React.memo(Component)</code></b> — HOC, который предотвращает повторный рендеринг компонента, если его props не изменились (поверхностное сравнение).</p>
+<pre>const MyComponent = React.memo(
+  function MyComp({ name }) {
+    return &lt;div&gt;{name}&lt;/div&gt;;
+});</pre>
+
+<p><b><code>useCallback(fn, [deps])</code></b> — мемоизирует <b>функцию</b>. Возвращает ту же ссылку на функцию, пока зависимости не изменились. Используется вместе с <code>React.memo</code>, чтобы дочерний компонент не перерисовывался из-за нового объекта функции.</p>
+<pre>const handleClick = useCallback(() => {
+  setCount(c => c + 1);
+}, []);</pre>
+
+<p><b><code>useMemo(fn, [deps])</code></b> — мемоизирует <b>результат вычисления</b>. Пересчитывает только при изменении зависимостей.</p>
+<pre>const result = useMemo(() => {
+  return heavyCalculation(data);
+}, [data]);</pre>
+
+<table>
+<tr><th>Хук</th><th>Что кэширует</th><th>Когда</th></tr>
+<tr><td>useCallback</td><td>Функцию</td><td>Передача callback в memo-компонент</td></tr>
+<tr><td>useMemo</td><td>Значение</td><td>Тяжёлые вычисления</td></tr>
+</table>`});
+
+S.push({q:"23. Опишите механизм blueprint'ов.",a:`<p><b>Blueprint (чертёж)</b> — механизм Flask для модульной организации приложения. Позволяет разбить приложение на логические части (модули), каждый со своими маршрутами, шаблонами и статическими файлами.</p>
+
+<pre>from flask import Blueprint
+
+auth_bp = Blueprint('auth', __name__,
+  template_folder='templates',
+  url_prefix='/auth')
+
+@auth_bp.route('/login')
+def login():
+    return 'Login page'
+
+@auth_bp.route('/register')
+def register():
+    return 'Register page'</pre>
+
+<p><b>Регистрация в приложении:</b></p>
+<pre>from flask import Flask
+app = Flask(__name__)
+app.register_blueprint(auth_bp)
+# маршруты: /auth/login, /auth/register</pre>
+
+<p><b>url_for с Blueprint:</b></p>
+<ul>
+<li><code>url_for('auth.login')</code> — полный путь (blueprint.endpoint)</li>
+<li><code>url_for('.login')</code> — относительный (внутри того же blueprint)</li>
+</ul>
+
+<p><b>Application Factory</b> — паттерн создания приложения через функцию <code>create_app(config)</code>, где регистрируются все blueprint'ы:</p>
+<pre>def create_app(config):
+    app = Flask(__name__)
+    app.config.from_object(config)
+    app.register_blueprint(auth_bp)
+    app.register_blueprint(api_bp)
+    return app</pre>`});
+
+S.push({q:"24. Опишите механизм создания схемы валидации данных с помощью библиотеки Zod. Как добавить схему в форму RHF?",a:`<p><b>Zod</b> — TypeScript-first библиотека валидации данных.</p>
+<p><b>Создание схемы:</b></p>
+<pre>import { z } from 'zod';
+
+const userSchema = z.object({
+  name: z.string().min(2, 'Мин. 2 символа'),
+  email: z.string().email('Невалидный email'),
+  age: z.number().min(18).max(99),
+  password: z.string().min(6),
+  confirmPassword: z.string()
+}).superRefine((data, ctx) => {
+  if (data.password !== data.confirmPassword) {
+    ctx.addIssue({
+      code: "custom",
+      message: "Пароли не совпадают",
+      path: ["confirmPassword"]
+    });
+  }
+});</pre>
+
+<p><b>Типы Zod:</b> <code>z.string()</code>, <code>z.number()</code>, <code>z.boolean()</code>, <code>z.literal()</code>, <code>z.object()</code>, <code>z.array()</code>.</p>
+<p><b>Методы string:</b> <code>.min()</code>, <code>.max()</code>, <code>.length()</code>, <code>.email()</code>, <code>.url()</code>, <code>.uuid()</code>, <code>.regex()</code>, <code>.startsWith()</code>, <code>.endsWith()</code>, <code>.includes()</code>.</p>
+
+<p><b>Интеграция с RHF через zodResolver:</b></p>
+<pre>import { zodResolver }
+  from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+
+const { register, handleSubmit,
+  formState: { errors } } = useForm({
+  resolver: zodResolver(userSchema)
+});
+// Zod автоматически валидирует
+// данные при отправке</pre>`});
+
+S.push({q:"25. Охарактеризуйте архитектуру на основе микросервисов, в чем ее преимущества?",a:`<p><b>Микросервисная архитектура</b> — подход, при котором приложение разбивается на множество небольших независимых сервисов, каждый из которых выполняет одну бизнес-функцию, имеет собственную БД и общается с другими через API (HTTP/REST, Message Broker).</p>
+
+<p><b>Структура:</b> Client App → API Gateway (NGINX) → Microservice 1 (DB1), Microservice 2 (DB2), Microservice 3...</p>
+
+<p><b>Преимущества:</b></p>
+<ul>
+<li><b>Независимое развёртывание</b> — каждый сервис деплоится отдельно</li>
+<li><b>Масштабируемость</b> — можно масштабировать только нагруженные сервисы</li>
+<li><b>Технологическая гибкость</b> — разные сервисы могут быть на разных языках/фреймворках</li>
+<li><b>Отказоустойчивость</b> — сбой одного сервиса не приводит к падению всего приложения</li>
+<li><b>Небольшие команды</b> — каждая команда отвечает за свой сервис</li>
+</ul>
+
+<p><b>Технологии:</b> Docker (контейнеризация), Docker Compose (оркестрация), NGINX (reverse proxy, load balancer), Kafka (message broker).</p>
+
+<p><b>В сравнении с монолитом:</b> монолит — единое приложение, проще на старте, но сложнее масштабировать и поддерживать при росте.</p>`});
+
+S.push({q:"26. В чем разница использования функциональных компонентов и компонентов классов?",a:`<p><b>Классовый компонент:</b></p>
+<pre>class Welcome extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { count: 0 };
+  }
+  componentDidMount() { /* ... */ }
+  render() {
+    return &lt;h1&gt;{this.props.name}&lt;/h1&gt;;
+  }
+}</pre>
+
+<p><b>Функциональный компонент:</b></p>
+<pre>function Welcome({ name }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => { /* ... */ }, []);
+  return &lt;h1&gt;{name}: {count}&lt;/h1&gt;;
+}</pre>
+
+<table>
+<tr><th>Критерий</th><th>Классовый</th><th>Функциональный</th></tr>
+<tr><td>Синтаксис</td><td><code>class extends React.Component</code></td><td>Функция / стрелочная</td></tr>
+<tr><td>State</td><td><code>this.state / setState()</code></td><td><code>useState()</code></td></tr>
+<tr><td>Жизн. цикл</td><td>Методы (componentDidMount)</td><td><code>useEffect()</code></td></tr>
+<tr><td>this</td><td>Нужен (привязка контекста)</td><td>Не нужен</td></tr>
+<tr><td>Код</td><td>Больше boilerplate</td><td>Компактнее</td></tr>
+<tr><td>Хуки</td><td>Недоступны</td><td>Доступны</td></tr>
+<tr><td>Error Boundary</td><td>Поддерживает</td><td>Не поддерживает</td></tr>
+</table>
+<p>Функциональные компоненты с хуками — <b>рекомендуемый подход</b> в современном React.</p>`});
+
+S.push({q:"27. Опишите назначение хуков. Опишите хуки состояния и эффекта.",a:`<p><b>Хуки (Hooks)</b> — функции, позволяющие использовать state и другие возможности React в функциональных компонентах (с React 16.8).</p>
+<p><b>Правила:</b> вызывать только на верхнем уровне (не в циклах/условиях); только в функциональных компонентах или кастомных хуках.</p>
+
+<p><b>useState — хук состояния:</b></p>
+<pre>const [count, setCount] = useState(0);
+// count — текущее значение
+// setCount — функция обновления
+setCount(5);              // прямое значение
+setCount(prev => prev+1); // функц. обновление</pre>
+<p>При вызове <code>setCount</code> компонент перерисовывается с новым значением.</p>
+
+<p><b>useEffect — хук эффекта:</b></p>
+<pre>useEffect(() => {
+  // побочный эффект (запрос, подписка)
+  const timer = setInterval(tick, 1000);
+  return () => {
+    // cleanup — при размонтировании
+    clearInterval(timer);
+  };
+}, [dependencies]);</pre>
+<p><b>Зависимости:</b></p>
+<ul>
+<li><code>[]</code> — эффект один раз (componentDidMount)</li>
+<li><code>[a, b]</code> — при изменении a или b</li>
+<li>Без массива — при каждом рендере</li>
+</ul>
+<p><code>useLayoutEffect</code> — аналог useEffect, но синхронно после DOM-изменений (до отрисовки).</p>`});
+
+S.push({q:"28. Опишите алгоритмы балансировки нагрузки, реализуемые nginx.",a:`<p><b>NGINX</b> поддерживает следующие алгоритмы балансировки:</p>
+
+<p><b>1. Round Robin</b> (по умолчанию) — поочерёдная «закольцованная» отправка запросов на серверы.</p>
+<pre>upstream myapp {
+    server srv1.example.com;
+    server srv2.example.com;
+}</pre>
+
+<p><b>2. Weighted Round Robin</b> — учитывает производительность серверов через весовые коэффициенты.</p>
+<pre>upstream myapp {
+    server srv1.example.com weight=3;
+    server srv2.example.com; # weight=1
+}</pre>
+
+<p><b>3. Least Connections</b> — каждый запрос направляется на сервер с наименьшим количеством активных подключений.</p>
+<pre>upstream myapp {
+    least_conn;
+    server srv1.example.com;
+    server srv2.example.com;
+}</pre>
+
+<p><b>4. Sticky Sessions (IP Hash)</b> — запросы от одного клиента (по IP) направляются на один и тот же сервер.</p>
+<pre>upstream myapp {
+    ip_hash;
+    server srv1.example.com;
+    server srv2.example.com;
+}</pre>
+
+<p><b>Конфигурация балансировщика:</b></p>
+<pre>server {
+  listen 80;
+  location / { proxy_pass http://myapp; }
+}</pre>`});
+
+S.push({q:"29. Опишите механизм использования JWT.",a:`<p><b>JWT (JSON Web Token)</b> — открытый стандарт для безопасной передачи информации между сторонами в виде JSON-объекта. Используется для аутентификации и авторизации.</p>
+
+<p><b>Структура JWT</b> (3 части, разделённые точкой):</p>
+<ol>
+<li><b>Header</b> — алгоритм и тип: <code>{"alg":"HS256","typ":"JWT"}</code></li>
+<li><b>Payload</b> — полезная нагрузка (claims): <code>{"sub":"1234","name":"John","iat":1516239022}</code></li>
+<li><b>Signature</b> — подпись: <code>HMACSHA256(base64Url(header) + "." + base64Url(payload), secret)</code></li>
+</ol>
+
+<p><b>Механизм Access + Refresh токенов:</b></p>
+<ol>
+<li>Клиент отправляет запрос авторизации → Authorization Server</li>
+<li>Сервер возвращает <b>Access token</b> (короткоживущий) и <b>Refresh token</b> (долгоживущий)</li>
+<li>Клиент использует Access token для доступа к Resource Server</li>
+<li>Resource Server проверяет токен и возвращает данные</li>
+<li>Когда Access token истекает → клиент получает ошибку</li>
+<li>Клиент отправляет Refresh token → получает новую пару токенов</li>
+</ol>
+
+<p><b>В микросервисах:</b> один сервис (Auth) имеет <b>Secret key</b> для создания JWT, остальные микросервисы имеют <b>Public key</b> для проверки подписи токена.</p>`});
+
+S.push({q:"30. Раскройте понятия обратный прокси.",a:`<p><b>Прокси-сервер (прямой)</b> — посредник между пользователями и интернетом. Клиенты (private IPs) обращаются к прокси (public IP), который пересылает запросы в интернет.</p>
+
+<p><b>Reverse Proxy (обратный прокси)</b> — посредник между интернетом и внутренними серверами. Принимает запросы из интернета и перенаправляет их на один или несколько внутренних веб-серверов. Клиент не знает о реальных серверах — обращается к прокси (например, example.com).</p>
+
+<p><b>Назначение обратного прокси:</b></p>
+<ul>
+<li><b>Балансировка нагрузки</b> — распределение запросов между серверами</li>
+<li><b>SSL-терминация</b> — обработка HTTPS на прокси, разгрузка бэкенда</li>
+<li><b>Кэширование</b> — кэш статического контента</li>
+<li><b>Безопасность</b> — скрывает внутреннюю инфраструктуру от внешнего мира</li>
+<li><b>Сжатие</b> — gzip-сжатие ответов</li>
+</ul>
+
+<p><b>NGINX как обратный прокси:</b></p>
+<pre>location /static/ {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection 'upgrade';
+    proxy_set_header Host $host;
+}</pre>
+<p>NGINX принимает запрос от клиента и проксирует его на внутренний сервер (127.0.0.1:3000).</p>`});
+
+// ==================== ЗАДАЧИ ====================
+
+S.push({q:"ЗАДАЧА: Компонент кнопки",a:`<pre>import React from 'react';
+
+class Button extends React.Component {
+  handleClick = () => {
+    console.log('Кнопка была нажата');
+  };
+  render() {
+    return (
+      &lt;button onClick={this.handleClick}&gt;
+        Нажми меня
+      &lt;/button&gt;
+    );
+  }
+}
+export default Button;</pre>
+<div class="ext"><div class="ext-title">теория</div>
+<p><b>Классовый компонент</b> — наследует <code>React.Component</code>, обязан содержать метод <code>render()</code>, который возвращает JSX.</p>
+<p><b>Обработка событий:</b> <code>onClick={this.handleClick}</code> — передаём ссылку на метод, НЕ вызываем (без скобок). В JSX используется camelCase: onClick, onChange, onSubmit.</p>
+<p><b>Стрелочная функция</b> в свойстве класса (<code>handleClick = () => {}</code>) автоматически привязывает <code>this</code> к экземпляру. Без стрелки нужно <code>this.handleClick = this.handleClick.bind(this)</code> в constructor.</p>
+<p><b>export default</b> — экспорт компонента для импорта в других файлах: <code>import Button from './Button'</code>.</p></div>`});
+
+S.push({q:"ЗАДАЧА: Форма ввода данных",a:`<pre>class Form extends React.Component {
+  state = { inputValue: '' };
+  handleChange = (e) => {
+    this.setState({inputValue: e.target.value});
+  };
+  handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(this.state.inputValue);
+  };
+  render() {
+    return (
+      &lt;form onSubmit={this.handleSubmit}&gt;
+        &lt;input type="text"
+          value={this.state.inputValue}
+          onChange={this.handleChange} /&gt;
+        &lt;button type="submit"&gt;
+          Отправить&lt;/button&gt;
+      &lt;/form&gt;
+    );
+  }
+}
+export default Form;</pre>
+<div class="ext"><div class="ext-title">теория</div>
+<p><b>Контролируемый компонент</b> — значение input хранится в state, а не в DOM. <code>value={this.state.inputValue}</code> + <code>onChange</code> — React управляет значением поля.</p>
+<p><b>setState()</b> — единственный способ изменить state в классовом компоненте. Вызывает повторный рендеринг. Работает <b>асинхронно</b> — React группирует обновления.</p>
+<p><b>e.preventDefault()</b> — отменяет стандартное поведение (перезагрузку страницы при submit).</p>
+<p><b>e.target.value</b> — текущее значение input. Объект <code>e</code> — синтетическое событие React (SyntheticEvent), оборачивает нативное событие браузера.</p>
+<p><b>Инициализация state</b> через свойство класса (<code>state = {}</code>) — сокращённый синтаксис, эквивалентен <code>this.state = {}</code> в constructor.</p></div>`});
+
+S.push({q:"ЗАДАЧА: Список пользователей (map)",a:`<pre>class UserList extends React.Component {
+  state = {
+    users: [
+      {id:1,name:'John',
+        email:'john@example.com'},
+      {id:2,name:'Jane',
+        email:'jane@example.com'},
+      {id:3,name:'Bob',
+        email:'bob@example.com'}
+    ]
+  };
+  render() {
+    return (&lt;div&gt;
+      &lt;h2&gt;Список пользователей:&lt;/h2&gt;
+      &lt;ul&gt;
+      {this.state.users.map((u) =&gt; (
+        &lt;li key={u.id}&gt;
+          {u.name}, {u.email}
+        &lt;/li&gt;
+      ))}
+      &lt;/ul&gt;
+    &lt;/div&gt;);
+  }
+}
+export default UserList;</pre>
+<div class="ext"><div class="ext-title">теория</div>
+<p><b>Рендеринг списков</b> — массив элементов в JSX через <code>{}</code>. Метод <code>.map()</code> создаёт новый массив JSX-элементов из массива данных.</p>
+<p><b>Атрибут key</b> — обязателен при рендеринге списков. Помогает React определить, какие элементы изменились/добавились/удалились. Должен быть <b>уникальным</b> среди соседей (обычно id из данных). Нельзя использовать индекс массива как key при изменяемых списках.</p>
+<p><b>map() vs forEach():</b> map возвращает новый массив (нужен для JSX), forEach ничего не возвращает.</p>
+<p><b>State с массивом</b> — данные хранятся в state компонента. При изменении (добавление/удаление) нужно создавать новый массив: <code>this.setState({users: [...this.state.users, newUser]})</code>. Нельзя мутировать state напрямую.</p></div>`});
+
+S.push({q:"ЗАДАЧА: useContext (ThemeContext)",a:`<pre>import React, { createContext,
+  useContext } from 'react';
+
+const ThemeContext = createContext();
+
+function ThemeProvider({ children }) {
+  const theme = 'light';
+  return (
+    &lt;ThemeContext.Provider value={theme}&gt;
+      {children}
+    &lt;/ThemeContext.Provider&gt;
+  );
+}
+function Content() {
+  const theme = useContext(ThemeContext);
+  return &lt;h2&gt;Тема: {theme}&lt;/h2&gt;;
+}
+function App() {
+  return (
+    &lt;ThemeProvider&gt;
+      &lt;Content /&gt;
+    &lt;/ThemeProvider&gt;
+  );
+}
+export default App;</pre>
+<div class="ext"><div class="ext-title">теория</div>
+<p><b>Context API</b> — механизм передачи данных через дерево компонентов без «пробрасывания» props на каждом уровне (prop drilling).</p>
+<p><b>createContext()</b> — создаёт объект контекста с двумя компонентами: <code>Provider</code> и <code>Consumer</code>.</p>
+<p><b>Provider</b> — оборачивает дерево компонентов, передаёт значение через <code>value={...}</code>. Все дочерние компоненты получают доступ к этому значению.</p>
+<p><b>useContext(Context)</b> — хук, возвращает текущее значение контекста. Компонент перерисуется при изменении value в Provider.</p>
+<p><b>children</b> — специальный проп, содержащий вложенные элементы: <code>&lt;Provider&gt;{children}&lt;/Provider&gt;</code>.</p>
+<p><b>Когда использовать:</b> тема, локаль, авторизация — данные, нужные многим компонентам на разных уровнях вложенности.</p></div>`});
+
+S.push({q:"ЗАДАЧА: JS — сумма, уникальные, объект, условия",a:`<pre>function sumNumbers(a, b) {
+  return a + b;
+}
+
+function getUniqueValues(arr) {
+  return Array.from(new Set(arr));
+}
+
+function formatStudent(student) {
+  return \`Имя: \${student.name},
+    Возраст: \${student.age}\`;
+}
+
+function checkNumber(n) {
+  if (n > 0) return 'Положительное';
+  else if (n < 0) return 'Отрицательное';
+  else return 'Ноль';
+}</pre>
+<div class="ext"><div class="ext-title">теория</div>
+<p><b>Функции:</b> объявление через <code>function name(params) {}</code>. Оператор <code>return</code> возвращает значение и завершает выполнение.</p>
+<p><b>Set</b> — коллекция уникальных значений. <code>new Set(arr)</code> удаляет дубликаты. <code>Array.from(set)</code> или <code>[...set]</code> — обратно в массив.</p>
+<p><b>Шаблонные строки</b> — обратные кавычки <code>\`...\`</code>. Подстановка выражений через <code>\${expr}</code>. Поддерживают многострочность.</p>
+<p><b>Доступ к свойствам объекта:</b> через точку <code>student.name</code> или через скобки <code>student['name']</code>.</p>
+<p><b>Условные операторы:</b> <code>if/else if/else</code> — проверка условий. Тернарный: <code>cond ? a : b</code>. Switch — для множества вариантов.</p></div>`});
+
+S.push({q:"ЗАДАЧА: JS — циклы, строки, DOM, формы",a:`<pre>function multiplicationTable(n) {
+  for (let i=1; i&lt;=10; i++)
+    console.log(n+' * '+i+' = '+n*i);
+}
+
+function reverseWords(str) {
+  return str.split(' ')
+    .map(w =&gt; w.split('')
+      .reverse().join(''))
+    .join(' ');
+}
+
+// DOM — клик
+btn.addEventListener('click', () =&gt; {
+  alert('Кнопка нажата!');
+});
+
+// Форма
+form.addEventListener('submit', (e) =&gt; {
+  e.preventDefault();
+  console.log(
+    document.getElementById('name').value,
+    document.getElementById('email').value
+  );
+});</pre>
+<div class="ext"><div class="ext-title">теория</div>
+<p><b>Цикл for:</b> <code>for (init; condition; step)</code>. <code>let</code> — блочная область видимости, <code>var</code> — функциональная.</p>
+<p><b>Методы строк:</b> <code>split(sep)</code> — строку в массив, <code>join(sep)</code> — массив в строку, <code>reverse()</code> — разворот массива. Цепочка: split→map→reverse→join.</p>
+<p><b>addEventListener(event, handler)</b> — добавляет обработчик события к DOM-элементу. Можно добавить несколько обработчиков на одно событие (в отличие от <code>onclick=</code>).</p>
+<p><b>e.preventDefault()</b> — отменяет действие по умолчанию (перезагрузку при submit, переход по ссылке).</p>
+<p><b>.value</b> — свойство элемента input, содержит текущее введённое значение.</p>
+<p><b>getElementById()</b> — возвращает один элемент по id. Самый быстрый метод поиска в DOM.</p></div>`});
+
+S.push({q:"ЗАДАЧА: JS — всплытие и погружение событий",a:`<pre>// HTML-структура:
+// &lt;div id="outer"&gt;
+//   &lt;div id="inner"&gt;
+//     &lt;button id="btn"&gt;Click&lt;/button&gt;
+//   &lt;/div&gt;
+// &lt;/div&gt;
+
+const outer = document.getElementById('outer');
+const inner = document.getElementById('inner');
+const btn = document.getElementById('btn');
+
+// Фаза погружения (capture: true)
+outer.addEventListener('click', () =&gt; {
+  console.log('outer — погружение');
+}, true);
+
+inner.addEventListener('click', () =&gt; {
+  console.log('inner — погружение');
+}, true);
+
+// Фаза всплытия (по умолчанию)
+btn.addEventListener('click', (e) =&gt; {
+  console.log('btn — цель (target)');
+  // e.stopPropagation(); // остановит всплытие
+});
+
+inner.addEventListener('click', () =&gt; {
+  console.log('inner — всплытие');
+});
+
+outer.addEventListener('click', () =&gt; {
+  console.log('outer — всплытие');
+});
+
+// При клике на кнопку в консоли:
+// outer — погружение
+// inner — погружение
+// btn — цель (target)
+// inner — всплытие
+// outer — всплытие</pre>
+<div class="ext"><div class="ext-title">теория</div>
+<p><b>Всплытие (bubbling)</b> — когда событие происходит на элементе, сначала срабатывает обработчик на нём, потом на его родителе, затем выше и так далее вверх по цепочке предков. Почти все события всплывают (исключения: <code>focus</code>, <code>blur</code>, <code>scroll</code>).</p>
+<p><b>Погружение (capturing)</b> — обратная фаза: событие идёт сверху вниз от корня документа до целевого элемента. Для перехвата на этой фазе нужно передать третий аргумент <code>true</code> (или <code>{capture: true}</code>) в <code>addEventListener</code>.</p>
+<p><b>3 фазы события по стандарту DOM Events:</b></p>
+<ul>
+<li><b>1. Capturing (погружение)</b> — событие идёт от <code>window</code> → <code>document</code> → ... → родитель элемента</li>
+<li><b>2. Target (цель)</b> — событие достигло целевого элемента</li>
+<li><b>3. Bubbling (всплытие)</b> — событие поднимается от элемента обратно вверх</li>
+</ul>
+<p><b>event.target</b> — элемент, на котором произошло событие (не меняется при всплытии). <b>event.currentTarget</b> (= <code>this</code>) — элемент, на котором сейчас сработал обработчик.</p>
+<p><b>event.stopPropagation()</b> — останавливает всплытие/погружение. <b>event.stopImmediatePropagation()</b> — останавливает и запрещает выполнение остальных обработчиков на текущем элементе.</p>
+<p><b>Делегирование событий</b> — вместо назначения обработчика каждому элементу, ставим один обработчик на общего предка и определяем целевой элемент через <code>event.target</code>:</p>
+<pre>document.getElementById('list')
+  .addEventListener('click', (e) =&gt; {
+    if (e.target.tagName === 'LI') {
+      console.log(e.target.textContent);
+    }
+});</pre>
+<p>Делегирование работает благодаря всплытию — клик на <code>&lt;li&gt;</code> всплывает до <code>&lt;ul&gt;</code>, где его ловит обработчик.</p></div>`});
+
+// ==================== УПРАВЛЕНИЕ ====================
+let cur=0;
+const sl=document.getElementById('slide'),pr=document.getElementById('progress'),ct=document.getElementById('counter'),sh=document.getElementById('scrollhint');
+const STEP=Math.round(window.innerHeight*0.75);
+
+function render(){
+  const s=S[cur];
+  sl.innerHTML='<div class="qtitle">'+s.q+'</div><div class="content">'+s.a+'</div>';
+  sl.scrollTop=0;
+  pr.style.width=((cur+1)/S.length*100)+'%';
+  ct.textContent=(cur+1)+'/'+S.length;
+  updSH();
+}
+function updSH(){
+  const can=sl.scrollHeight>sl.clientHeight;
+  const bot=sl.scrollTop+sl.clientHeight>=sl.scrollHeight-5;
+  const top=sl.scrollTop<=5;
+  sh.textContent=!can?'':top&&bot?'':top?'▼':bot?'▲':'▲▼';
+}
+sl.addEventListener('scroll',updSH);
+
+let holdTimer=null,holdInterval=null,holding=false;
+function doStep(dir){
+  if(dir===1){
+    const can=sl.scrollHeight>sl.clientHeight;
+    const bot=sl.scrollTop+sl.clientHeight>=sl.scrollHeight-5;
+    if(can&&!bot) sl.scrollBy({top:STEP,behavior:'smooth'});
+    else if(cur<S.length-1){cur++;render();}
+  }else{
+    const top=sl.scrollTop<=5;
+    if(!top) sl.scrollBy({top:-STEP,behavior:'smooth'});
+    else if(cur>0){cur--;render();}
+  }
+}
+function stopHold(){clearTimeout(holdTimer);clearInterval(holdInterval);holdTimer=null;holdInterval=null;holding=false;}
+document.addEventListener('mousedown',function(e){
+  e.preventDefault();e.stopPropagation();
+  const dir=e.button===2?1:-1;
+  doStep(dir);
+  holdTimer=setTimeout(()=>{
+    holding=true;
+    holdInterval=setInterval(()=>doStep(dir),450);
+  },350);
+},true);
+document.addEventListener('mouseup',stopHold,true);
+document.addEventListener('mouseleave',stopHold,true);
+
+document.addEventListener('contextmenu',e=>{e.preventDefault();},true);
+['touchstart','touchmove','touchend','touchcancel'].forEach(ev=>{
+  document.addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();},{passive:false,capture:true});
+});
+document.addEventListener('click',e=>{e.preventDefault();},true);
+document.addEventListener('dblclick',e=>{e.preventDefault();},true);
+
+(async()=>{try{if('wakeLock' in navigator){let wl=await navigator.wakeLock.request('screen');document.addEventListener('visibilitychange',async()=>{if(document.visibilityState==='visible')wl=await navigator.wakeLock.request('screen');});}}catch(e){}})();
+
+let fs=false;
+document.addEventListener('mousedown',function(){if(!fs&&document.documentElement.requestFullscreen){document.documentElement.requestFullscreen().catch(()=>{});fs=true;}},{once:true});
+
+render();
+</script>
+</body>
+</html>
